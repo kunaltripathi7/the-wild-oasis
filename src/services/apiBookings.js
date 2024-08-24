@@ -57,7 +57,7 @@ export async function getBookingsAfterDate(date) {
   const { data, error } = await supabase
     .from("bookings")
     .select("created_at, totalPrice, extrasPrice")
-    .gte("created_at", date) // date should be ISO string -> supabase req
+    // .gte("created_at", date) // date should be ISO string -> supabase req
     .lte("created_at", getToday({ end: true })); // end = true for fixing the date -> cuz otherwise it will change every second.
 
   if (error) {
@@ -70,12 +70,13 @@ export async function getBookingsAfterDate(date) {
 
 // Returns all STAYS that are were created after the given date
 export async function getStaysAfterDate(date) {
+  console.log(date);
   const { data, error } = await supabase
     .from("bookings")
     // .select('*')
-    .select("*, guests(fullName)")
-    .gte("startDate", date)
-    .lte("startDate", getToday());
+    .select("*, guests(fullName)");
+  // .gte("startDate", date)
+  // .lte("startDate", getToday());
 
   if (error) {
     console.error(error);
@@ -90,10 +91,12 @@ export async function getStaysTodayActivity() {
   const { data, error } = await supabase
     .from("bookings")
     .select("*, guests(fullName, nationality, countryFlag)")
-    .or(
-      // or recieves two conditions either can be true
-      `and(status.eq.unconfirmed,startDate.eq.${getToday()}),and(status.eq.checked-in,endDate.eq.${getToday()})`
-    )
+    .order("created_at", { ascending: false })
+    .limit(4)
+    // .or(
+    //   // or recieves two conditions either can be true
+    //   `and(status.eq.unconfirmed,startDate.eq.${getToday()}),and(status.eq.checked-in,endDate.eq.${getToday()})`
+    // )
     .order("created_at");
 
   // Equivalent to this. But by querying this, we only download the data we actually need, otherwise we would need ALL bookings ever created
